@@ -15,8 +15,8 @@ train = True
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.set_num_threads(1)
 
-# Environment selection: 'reach', 'reach-dense', 'pick-and-place', 'pick-and-place-dense'
-TASK = 'reach'  # Change to 'pick-and-place' for harder task
+# Environment selection: 'reach'
+TASK = 'reach'
 
 if TASK == 'reach':
 	env_name = "FetchReach-v4"
@@ -193,4 +193,5 @@ try:
 	test_env.close()
 except Exception as e_load:
 	print(f'Could not load actor for rendering ({actor_path}):', e_load)
+
 
