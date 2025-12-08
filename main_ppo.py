@@ -36,17 +36,13 @@ env = gym.make(env_name)
 if USE_NOISY_OBS:
 	env = NoisyObservationWrapper(env, noise_std={'observation': noise, 'achieved_goal': noise}, keep_clean=True, seed=42)
 
+#temp env to check state_dim and action_dim
 state_dim = env.observation_space['observation'].shape[0] + env.observation_space['desired_goal'].shape[0]
 action_dim = env.action_space.shape[0]
-
-# we created a temporary env to read spaces above; close it now since each run creates its own env
 env.close()
 
-
-# PickAndPlace needs more episodes due to higher complexity
 n_episodes = 2500
 
-# Learning rate: 3e-4 for dense, 1e-4 for sparse+HER
 lr = 3e-4
 BS = 2048
 clip_ratio = 0.2
@@ -69,8 +65,8 @@ if train:
 		critic_model = ActorCriticNetwork(state_dim, 1).to(device)
 		actor_optimizer = torch.optim.Adam(actor_model.parameters(), lr=lr)
 		critic_optimizer = torch.optim.Adam(critic_model.parameters(), lr=3e-4)
-		# Use more HER samples for complex tasks
-		her_k = 8 if 'pick-and-place' in TASK else 4
+		# number of HER samples to get from trajectories
+		her_k = 4
 		agent = Agent(train_env, state_dim, action_dim, gamma=gamma, actor_model=actor_model, critic_model=critic_model, actor_optimizer=actor_optimizer, critic_optimizer=critic_optimizer, device=device, entropy_coef=entropy_coef, her_k=her_k, use_her=USE_HER)
 		agent.clip_ratio = clip_ratio
 
@@ -92,11 +88,11 @@ if train:
 		history = {
 			'seed': seed,
 			'init_reward': init_r,
-			# keep legacy name 'init_dist' but store initial episode length
+			# number of timesteps to reach goal
 			'init_dist': init_len,
 			'init_success_rate': init_success,
 			'final_reward': final_r,
-			# keep legacy name 'final_dist' but store final episode length
+			# episode length
 			'final_dist': final_len,
 			'final_success_rate': final_success,
 			'eval_rewards': agent.history.get('eval_rewards', []).copy(),
@@ -148,7 +144,7 @@ if train:
 			plt.plot(h['eval_episodes'], h['eval_rewards'], marker='o', label=f"seed={h['seed']}", linewidth=2, alpha=0.8, markersize=4)
 	plt.title('Evaluation Rewards During Training', fontsize=14)
 	plt.xlabel('Episode', fontsize=12)
-	plt.ylabel('Average Reward', fontsize=12)
+	plt.ylabel('Average Rewards/timesteps', fontsize=12)
 	plt.legend(fontsize=10)
 	plt.grid(True, alpha=0.3)
 	plt.tight_layout()
@@ -160,13 +156,12 @@ if train:
 	actor_path = f'actor_final_seed{last_seed}.pth'
 else:
 	# For rendering, load the last trained actor
-	actor_path = f'actor_final_seed{101}.pth'
+	actor_path = f'actor_final_seed{100}.pth'
 try:
 	test_actor = ActorCriticNetwork(state_dim, action_dim).to(device)
 	test_actor.load_state_dict(torch.load(actor_path, map_location=device))
 	test_actor.eval()
 
-	# First try: create env with human rendering
 	test_env = gym.make(env_name, render_mode='human')
 	n_test_episodes = 5
 	for ep in range(n_test_episodes):
@@ -193,5 +188,6 @@ try:
 	test_env.close()
 except Exception as e_load:
 	print(f'Could not load actor for rendering ({actor_path}):', e_load)
+
 
 
