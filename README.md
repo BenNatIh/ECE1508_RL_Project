@@ -2,6 +2,9 @@
 Project:
 Controlling Robotic Arm with RL
 
+Baseline: 
+To run the pid controller run pid_controller.py, To modify the params look into run_all_pid_baselines. You can modify seeds, noise levels, eval_fraction, max_episode_steps and eval episodes
+
 PPO:
 To train the PPO agent run main_ppo.py. Inside the file to change rewards from dense to sparse. change line 19 from TASK = 'reach-dense' to TASK = 'reach'.
 Can also toggle using noisy obervations or HER by changing USE_NOISY_OBS and USE_HER respectively.
@@ -14,5 +17,6 @@ To train and evaluate the SAC agent, run sac_agent.py.
 This script automatically trains SAC across all seeds, reward types (dense and sparse), and observation noise levels.
 All trained models, evaluation JSON files, and learning curve plots are saved under the results/ directory.
 To modify noise levels, seeds, or reward settings, edit the parameters in the run_all_experiments() function at the bottom of the script.
+
 
 
